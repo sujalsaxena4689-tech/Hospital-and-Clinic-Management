@@ -3,10 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-const Patient = require('./models/Patient');
-const Doctor = require('./models/Doctor');
-const Appointment = require('./models/Appointment');
-const Billing = require('./models/Billing');
+const Patient = require('./Models/Patient');
+const Doctor = require('./Models/Doctor');
+const Appointment = require('./Models/Appointment');
+const Billing = require('./Models/Billing');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
