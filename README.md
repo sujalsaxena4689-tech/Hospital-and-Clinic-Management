@@ -30,6 +30,9 @@ A full-stack web application designed to streamline hospital operations, manage 
 ---
 
 ## 🚀 How to Run Locally
+cd "Hospital Backend"
+npm install
+npm start
 
 ### **1. Clone the Repository**
 
