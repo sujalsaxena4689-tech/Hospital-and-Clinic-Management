@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCore - Hospital & Clinic Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a' },
+                        hospital: { 50: '#f0fdfa', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono-code { font-family: 'Fira Code', monospace; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- TOP NAVBAR -->
+    <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 z-20 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-hospital-600 to-medical-500 flex items-center justify-center text-white shadow-md shadow-hospital-500/20">
+                <i class="fa-solid fa-hospital-user text-lg"></i>
+            </div>
+            <div>
+                <span class="font-bold text-lg text-slate-900 tracking-tight">MediCore</span>
+                <p class="text-xs text-slate-500">Connected to: <code id="api-status" class="text-amber-600 font-bold">Connecting...</code></p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-sm">
+                    DR
+                </div>
+                <div class="hidden md:block text-left">
+                    <p class="text-xs font-bold text-slate-800">Dr. Robert Chen</p>
+                    <p class="text-[10px] text-slate-500">Chief Medical Officer</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 z-10">
+            <nav class="p-4 space-y-1.5 overflow-y-auto">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Main Menu</p>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-hospital-700 bg-hospital-50 transition">
+                    <i class="fa-solid fa-chart-pie w-5 text-center text-hospital-600"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchTab('patients')" id="nav-patients" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                    <i class="fa-solid fa-bed-pulse w-5 text-center text-slate-400"></i>
+                    <span>Patients Registry</span>
+                </button>
+                <button onclick="switchTab('doctors')" id="nav-doctors" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                    <i class="fa-solid fa-user-doctor w-5 text-center text-slate-400"></i>
+                    <span>Doctors & Staff</span>
+                </button>
+                <button onclick="switchTab('appointments')" id="nav-appointments" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                    <i class="fa-solid fa-calendar-check w-5 text-center text-slate-400"></i>
+                    <span>Appointments</span>
+                </button>
+                <button onclick="switchTab('billing')" id="nav-billing" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center text-slate-400"></i>
+                    <span>Billing & Invoices</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-200 bg-slate-50/50">
+                <div class="bg-hospital-50 border border-hospital-200 rounded-xl p-3 text-xs">
+                    <div class="flex items-center space-x-2 text-hospital-800 font-bold mb-1">
+                        <i class="fa-solid fa-server"></i>
+                        <span>Express Server</span>
+                    </div>
+                    <p class="text-slate-600 text-[11px]">Backend API: <code class="font-mono-code font-bold">http://localhost:5000</code></p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-6 flex flex-col">
+
+            <!-- TAB 1: DASHBOARD -->
+            <section id="tab-dashboard" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Patients</p>
+                            <h3 id="stat-patients" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-bed-pulse"></i></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Doctors</p>
+                            <h3 id="stat-doctors" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg"><i class="fa-solid fa-user-doctor"></i></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Appointments</p>
+                            <h3 id="stat-appointments" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg"><i class="fa-solid fa-calendar-check"></i></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue</p>
+                            <h3 id="stat-revenue" class="text-2xl font-bold text-slate-800 mt-1">$0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-solid fa-wallet"></i></div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <h4 class="font-bold text-slate-800 mb-4"><i class="fa-solid fa-bolt text-amber-500 mr-2"></i> Quick Actions</h4>
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="openModal('patient')" class="px-4 py-2.5 bg-hospital-600 text-white rounded-xl text-sm font-bold shadow-xs hover:bg-hospital-700 transition"><i class="fa-solid fa-user-plus mr-2"></i> Register Patient</button>
+                        <button onclick="openModal('appointment')" class="px-4 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-bold shadow-xs hover:bg-slate-900 transition"><i class="fa-solid fa-calendar-plus mr-2"></i> Book Appointment</button>
+                        <button onclick="openModal('billing')" class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-xs hover:bg-emerald-700 transition"><i class="fa-solid fa-receipt mr-2"></i> Create Invoice</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: PATIENTS -->
+            <section id="tab-patients" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-900">Patient Directory</h2>
+                    <button onclick="openModal('patient')" class="px-4 py-2.5 bg-hospital-600 text-white font-bold rounded-xl text-sm">Register Patient</button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
+                                <th class="py-3.5 px-4">Patient Name</th>
+                                <th class="py-3.5 px-4">Age / Gender</th>
+                                <th class="py-3.5 px-4">Contact</th>
+                                <th class="py-3.5 px-4">Blood Group</th>
+                                <th class="py-3.5 px-4">Illness</th>
+                                <th class="py-3.5 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patients-tbody" class="text-sm divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 3: DOCTORS -->
+            <section id="tab-doctors" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-900">Doctors & Staff</h2>
+                    <button onclick="openModal('doctor')" class="px-4 py-2.5 bg-hospital-600 text-white font-bold rounded-xl text-sm">Add Doctor</button>
+                </div>
+                <div id="doctors-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </section>
+
+            <!-- TAB 4: APPOINTMENTS -->
+            <section id="tab-appointments" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-900">Appointments Schedule</h2>
+                    <button onclick="openModal('appointment')" class="px-4 py-2.5 bg-hospital-600 text-white font-bold rounded-xl text-sm">Schedule Appointment</button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
+                                <th class="py-3.5 px-4">App ID</th>
+                                <th class="py-3.5 px-4">Patient</th>
+                                <th class="py-3.5 px-4">Doctor</th>
+                                <th class="py-3.5 px-4">Date & Time</th>
+                                <th class="py-3.5 px-4">Status</th>
+                                <th class="py-3.5 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointments-tbody" class="text-sm divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 5: BILLING -->
+            <section id="tab-billing" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-900">Billing & Invoices</h2>
+                    <button onclick="openModal('billing')" class="px-4 py-2.5 bg-hospital-600 text-white font-bold rounded-xl text-sm">Create Invoice</button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
+                                <th class="py-3.5 px-4">Invoice ID</th>
+                                <th class="py-3.5 px-4">Patient</th>
+                                <th class="py-3.5 px-4">Description</th>
+                                <th class="py-3.5 px-4">Amount</th>
+                                <th class="py-3.5 px-4">Status</th>
+                                <th class="py-3.5 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billing-tbody" class="text-sm divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- UNIVERSAL MODAL -->
+    <div id="app-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <h3 id="modal-title" class="font-bold text-slate-800 text-base">Modal Title</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modal-body" class="p-6"></div>
+        </div>
+    </div>
+
+    <!-- FRONTEND JAVASCRIPT CONNECTED TO BACKEND API -->
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let state = { patients: [], doctors: [], appointments: [], billing: [] };
+
+        async function checkServer() {
+            try {
+                const res = await fetch(`${API_URL}/patients`);
+                if (res.ok) {
+                    document.getElementById('api-status').innerText = 'Online (Connected)';
+                    document.getElementById('api-status').className = 'text-emerald-600 font-bold';
+                    loadAllData();
+                }
+            } catch (err) {
+                document.getElementById('api-status').innerText = 'Offline (Run npm run dev)';
+                document.getElementById('api-status').className = 'text-rose-600 font-bold';
+            }
+        }
+
+        async function loadAllData() {
+            try {
+                const [pRes, dRes, aRes, bRes] = await Promise.all([
+                    fetch(`${API_URL}/patients`),
+                    fetch(`${API_URL}/doctors`),
+                    fetch(`${API_URL}/appointments`),
+                    fetch(`${API_URL}/billing`)
+                ]);
+                state.patients = await pRes.json();
+                state.doctors = await dRes.json();
+                state.appointments = await aRes.json();
+                state.billing = await bRes.json();
+                renderUI();
+            } catch (err) {
+                console.error("Error loading data from backend:", err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            checkServer();
+        });
+
+        function switchTab(tabId) {
+            ['dashboard', 'patients', 'doctors', 'appointments', 'billing'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).className = "w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition";
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).className = "w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-hospital-700 bg-hospital-50 transition";
+        }
+
+        function renderUI() {
+            // Dashboard Stats
+            document.getElementById('stat-patients').innerText = state.patients.length;
+            document.getElementById('stat-doctors').innerText = state.doctors.length;
+            document.getElementById('stat-appointments').innerText = state.appointments.length;
+            const totalRev = state.billing.filter(b => b.status === 'Paid').reduce((acc, curr) => acc + curr.amount, 0);
+            document.getElementById('stat-revenue').innerText = `$${totalRev}`;
+
+            // Patients Table
+            document.getElementById('patients-tbody').innerHTML = state.patients.map(p => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3.5 px-4 font-bold text-slate-800">${p.name}<br><span class="text-[10px] text-slate-400 font-mono-code">${p.patientId}</span></td>
+                    <td class="py-3.5 px-4 text-slate-600">${p.age} yrs / ${p.gender}</td>
+                    <td class="py-3.5 px-4 text-slate-600 text-xs">${p.phone}<br>${p.email}</td>
+                    <td class="py-3.5 px-4"><span class="px-2 py-0.5 bg-rose-50 text-rose-700 font-bold rounded text-xs">${p.bloodGroup}</span></td>
+                    <td class="py-3.5 px-4 text-slate-700 font-medium">${p.illness}</td>
+                    <td class="py-3.5 px-4 text-right"><button onclick="deletePatient('${p.patientId}')" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+
+            // Doctors Grid
+            document.getElementById('doctors-grid').innerHTML = state.doctors.map(d => `
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                    <h4 class="font-bold text-slate-800">${d.name}</h4>
+                    <span class="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 font-semibold rounded-full inline-block mt-1">${d.spec}</span>
+                    <p class="text-xs text-slate-500 mt-2">Dept: ${d.dept}</p>
+                    <p class="text-xs text-slate-500">Phone: ${d.phone}</p>
+                </div>
+            `).join('');
+
+            // Appointments Table
+            document.getElementById('appointments-tbody').innerHTML = state.appointments.map(a => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3.5 px-4 font-mono-code text-xs font-bold">${a.appointmentId}</td>
+                    <td class="py-3.5 px-4 font-bold">${a.patientName}</td>
+                    <td class="py-3.5 px-4">${a.doctorName}</td>
+                    <td class="py-3.5 px-4 text-xs">${a.dateTime}</td>
+                    <td class="py-3.5 px-4"><span class="px-2 py-1 rounded text-xs font-bold ${a.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">${a.status}</span></td>
+                    <td class="py-3.5 px-4 text-right"><button onclick="toggleAppointment('${a.appointmentId}')" class="text-xs bg-slate-100 px-2.5 py-1 rounded font-bold">Toggle</button></td>
+                </tr>
+            `).join('');
+
+            // Billing Table
+            document.getElementById('billing-tbody').innerHTML = state.billing.map(b => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3.5 px-4 font-mono-code text-xs font-bold">${b.invoiceId}</td>
+                    <td class="py-3.5 px-4 font-bold">${b.patientName}</td>
+                    <td class="py-3.5 px-4">${b.desc}</td>
+                    <td class="py-3.5 px-4 font-bold">$${b.amount}</td>
+                    <td class="py-3.5 px-4"><span class="px-2 py-1 rounded text-xs font-bold ${b.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">${b.status}</span></td>
+                    <td class="py-3.5 px-4 text-right"><button onclick="markPaid('${b.invoiceId}')" class="text-xs bg-slate-100 px-2.5 py-1 rounded font-bold">Mark Paid</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // Modals & API Actions
+        function openModal(type) {
+            const modal = document.getElementById('app-modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            modal.classList.remove('hidden');
+
+            if (type === 'patient') {
+                title.innerText = "Register Patient";
+                body.innerHTML = `
+                    <form onsubmit="submitPatient(event)" class="space-y-3">
+                        <input type="text" id="p-name" placeholder="Full Name" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="number" id="p-age" placeholder="Age" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <select id="p-gender" class="w-full px-3 py-2 border rounded-xl text-sm"><option>Male</option><option>Female</option></select>
+                        <input type="text" id="p-phone" placeholder="Phone" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="email" id="p-email" placeholder="Email" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="text" id="p-blood" placeholder="Blood Group (e.g. O+)" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="text" id="p-illness" placeholder="Primary Illness" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <button type="submit" class="w-full py-2.5 bg-hospital-600 text-white rounded-xl font-bold text-sm">Save Patient</button>
+                    </form>
+                `;
+            } else if (type === 'appointment') {
+                title.innerText = "Book Appointment";
+                body.innerHTML = `
+                    <form onsubmit="submitAppointment(event)" class="space-y-3">
+                        <select id="a-patient" class="w-full px-3 py-2 border rounded-xl text-sm">${state.patients.map(p => `<option value="${p.name}">${p.name}</option>`).join('')}</select>
+                        <select id="a-doctor" class="w-full px-3 py-2 border rounded-xl text-sm">${state.doctors.map(d => `<option value="${d.name}">${d.name} (${d.spec})</option>`).join('')}</select>
+                        <input type="text" id="a-time" value="2026-06-15 10:00 AM" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <button type="submit" class="w-full py-2.5 bg-hospital-600 text-white rounded-xl font-bold text-sm">Book Appointment</button>
+                    </form>
+                `;
+            } else if (type === 'doctor') {
+                title.innerText = "Add Doctor";
+                body.innerHTML = `
+                    <form onsubmit="submitDoctor(event)" class="space-y-3">
+                        <input type="text" id="d-name" placeholder="Doctor Name" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="text" id="d-spec" placeholder="Specialization" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="text" id="d-dept" placeholder="Department" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="text" id="d-phone" placeholder="Phone" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="email" id="d-email" placeholder="Email" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <button type="submit" class="w-full py-2.5 bg-hospital-600 text-white rounded-xl font-bold text-sm">Save Doctor</button>
+                    </form>
+                `;
+            } else if (type === 'billing') {
+                title.innerText = "Create Invoice";
+                body.innerHTML = `
+                    <form onsubmit="submitBilling(event)" class="space-y-3">
+                        <select id="b-patient" class="w-full px-3 py-2 border rounded-xl text-sm">${state.patients.map(p => `<option value="${p.name}">${p.name}</option>`).join('')}</select>
+                        <input type="text" id="b-desc" placeholder="Service Description" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <input type="number" id="b-amount" placeholder="Amount ($)" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <button type="submit" class="w-full py-2.5 bg-hospital-600 text-white rounded-xl font-bold text-sm">Generate Invoice</button>
+                    </form>
+                `;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('app-modal').classList.add('hidden');
+        }
+
+        async function submitPatient(e) {
+            e.preventDefault();
+            const data = {
+                patientId: `PAT-${Math.floor(100 + Math.random() * 900)}`,
+                name: document.getElementById('p-name').value,
+                age: document.getElementById('p-age').value,
+                gender: document.getElementById('p-gender').value,
+                phone: document.getElementById('p-phone').value,
+                email: document.getElementById('p-email').value,
+                bloodGroup: document.getElementById('p-blood').value,
+                illness: document.getElementById('p-illness').value
+            };
+            await fetch(`${API_URL}/patients`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            closeModal();
+            loadAllData();
+        }
+
+        async function deletePatient(id) {
+            await fetch(`${API_URL}/patients/${id}`, { method: 'DELETE' });
+            loadAllData();
+        }
+
+        async function submitDoctor(e) {
+            e.preventDefault();
+            const data = {
+                doctorId: `DOC-${Math.floor(10 + Math.random() * 90)}`,
+                name: document.getElementById('d-name').value,
+                spec: document.getElementById('d-spec').value,
+                dept: document.getElementById('d-dept').value,
+                phone: document.getElementById('d-phone').value,
+                email: document.getElementById('d-email').value
+            };
+            await fetch(`${API_URL}/doctors`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            closeModal();
+            loadAllData();
+        }
+
+        async function submitAppointment(e) {
+            e.preventDefault();
+            const data = {
+                appointmentId: `APT-${Math.floor(500 + Math.random() * 400)}`,
+                patientName: document.getElementById('a-patient').value,
+                doctorName: document.getElementById('a-doctor').value,
+                dateTime: document.getElementById('a-time').value
+            };
+            await fetch(`${API_URL}/appointments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            closeModal();
+            loadAllData();
+        }
+
+        async function toggleAppointment(id) {
+            await fetch(`${API_URL}/appointments/${id}`, { method: 'PUT' });
+            loadAllData();
+        }
+
+        async function submitBilling(e) {
+            e.preventDefault();
+            const data = {
+                invoiceId: `INV-${Math.floor(900 + Math.random() * 90)}`,
+                patientName: document.getElementById('b-patient').value,
+                desc: document.getElementById('b-desc').value,
+                amount: parseFloat(document.getElementById('b-amount').value)
+            };
+            await fetch(`${API_URL}/billing`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            closeModal();
+            loadAllData();
+        }
+
+        async function markPaid(id) {
+            await fetch(`${API_URL}/billing/${id}`, { method: 'PUT' });
+            loadAllData();
+        }
+    </script>
+</body>
+</html>
